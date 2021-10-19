@@ -1,7 +1,6 @@
 '''
 Python program to generate SQL code from EXCEL file to fill tables
 '''
-
 import openpyxl
 
 path = input('File Path: ')
@@ -10,67 +9,99 @@ wb = openpyxl.load_workbook(path)
 sheet = wb.active
 print()
 
-n = 0
-atributos = []
-tabla = input("Nombre de Tabla: ")
-print()
-at = []
+class Table:
 
-# Receive column number and attributes names for table
-while True:
-    try:
-        n = int(input('Columna: '))
-        at.append(input('Nombre Atributo: '))
-        atributos.append(n)
-    except ValueError:
-        break
+    def __init__(self, name, attributes, columns, data, rows):
+        self.name = name
+        self.attributes = attributes
+        self.columns = columns
+        self.data = data
+        self.rows = rows
+    
+    def generateSQL(self):
 
-datos = []
-col = []
-# Amount of ROWS in spreadsheet
-filas = 46
-# Iterate rows and store data in list of lists
-for i in atributos:
-    for row_cells in sheet.iter_rows(min_row=2, max_row=filas):
-        try:
-            col.append(int(row_cells[i].value))
-        except ValueError:
-            col.append(str(row_cells[i].value))
-        except TypeError:
-            col.append(str(row_cells[i].value))
-    datos.append(col)
-    col = []
-#print(len(datos))
-
-# Generate SQL template with table name and attributes
-sql = f'INSERT INTO {tabla} ('
-for i in range(len(at)):
-    if i < len(at)-1:
-        sql += at[i] + ', '
-    else:
-        sql += at[i]
-sql += ')\nValues ('
-#print(sql)
-
-val = []
-val2 = []
-c = 0
-
-# Read values from list and store them in a string in SQL code format
-for i in range(filas-1):
-    for j in range(len(datos)):
-        try:
-            if isinstance(datos[j][i], str):
-                sql += f'\'{datos[j][i]}\'' 
+        sql = f'INSERT INTO {self.name} ('
+        for i in range(len(self.attributes)):
+            if i < len(self.attributes)-1:
+                sql += self.attributes[i] + ', '
             else:
-                sql += f'{datos[j][i]}'
+                sql += self.attributes[i]
+        sql += ')\nValues ('
 
-            if j < len(datos)-1:
-                sql += ', '
-        except IndexError:
+        # Read values from list and store them in a string in SQL code format
+        for i in range(self.rows):
+            for j in range(len(self.data)):
+                try:
+                    if isinstance(self.data[j][i], str):
+                        sql += f'\'{self.data[j][i]}\'' 
+                    else:
+                        sql += f'{self.data[j][i]}'
+
+                    if j < len(self.data)-1:
+                        sql += ', '
+                except IndexError:
+                    break
+
+            if i < self.rows-2:
+                sql += '), \n('
+            elif i < self.rows-1:
+                sql += ')'
+        
+        return sql
+    
+    def printData(self):
+        for i in self.data:
+            print(i)
+
+
+tables = []
+rows = int(input('Amount of Rows in columns: '))
+
+while True:
+    print('*'*5, 'New Table', '*'*5)
+
+    name = input("Table Name: ")
+    attributes = []
+    columns = []
+    data = []
+
+    if name == '':
+        break
+    
+    print()
+    print('*'*5, 'Attributes', '*'*5)
+    # Receive column number and attributes names for table
+    while True:
+        try:
+            n = int(input('Column Number: '))
+            attributes.append(input('Attribute Name: '))
+            columns.append(n)
+        except ValueError:
             break
-    sql += ')'
-    if i < filas-1:
-        sql += ', \n('
 
+    col = []
+    for i in columns:
+        for row_cells in sheet.iter_rows(min_row=2, max_row=rows):
+            try:
+                col.append(float(row_cells[i].value))
+            except ValueError:
+                col.append(str(row_cells[i].value))
+            except TypeError:
+                col.append(str(row_cells[i].value))
+            
+        data.append(col)
+        col = []
+    tables.append(Table(name, attributes, columns, data, rows))
+    print()
+
+for table in tables:
+    table.printData()
+
+sql = ''
+for table in tables:
+    sql += table.generateSQL()
+    sql += '\n\n'
+
+print()
+print('*'*5, 'SQL Code', '*'*5)
 print(sql)
