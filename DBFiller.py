@@ -3,12 +3,14 @@ Python program to generate SQL code from EXCEL file to fill tables
 '''
 import openpyxl
 
+# open Excel file
 path = input('File Path: ')
 print(path)
 wb = openpyxl.load_workbook(path)
 sheet = wb.active
 print()
 
+# Table class to store data
 class Table:
 
     def __init__(self, name, attributes, columns, data, rows):
@@ -18,8 +20,8 @@ class Table:
         self.data = data
         self.rows = rows
     
+    # Function to generate SQL code for the table
     def generateSQL(self):
-
         sql = f'INSERT INTO {self.name} ('
         for i in range(len(self.attributes)):
             if i < len(self.attributes)-1:
@@ -48,14 +50,11 @@ class Table:
                 sql += ')'
         
         return sql
-    
-    def printData(self):
-        for i in self.data:
-            print(i)
 
 
 tables = []
 rows = int(input('Amount of Rows in columns: '))
+print()
 
 while True:
     print('*'*5, 'New Table', '*'*5)
@@ -80,6 +79,7 @@ while True:
             break
 
     col = []
+    # Read data from the column and stores it in a list
     for i in columns:
         for row_cells in sheet.iter_rows(min_row=2, max_row=rows):
             try:
@@ -93,9 +93,6 @@ while True:
         col = []
     tables.append(Table(name, attributes, columns, data, rows))
     print()
-
-for table in tables:
-    table.printData()
 
 sql = ''
 for table in tables:
