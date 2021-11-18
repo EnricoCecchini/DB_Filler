@@ -83,7 +83,10 @@ while True:
     for i in columns:
         for row_cells in sheet.iter_rows(min_row=2, max_row=rows):
             try:
-                col.append(float(row_cells[i].value))
+                if '.' in row_cells[i].value:
+                    col.append(float(row_cells[i].value))
+                else:
+                    col.append(int(row_cells[i].value))
             except ValueError:
                 col.append(str(row_cells[i].value))
             except TypeError:
