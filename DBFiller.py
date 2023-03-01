@@ -35,7 +35,10 @@ class Table:
             for j in range(len(self.data)):
                 try:
                     if isinstance(self.data[j][i], str):
-                        sql += f'\'{self.data[j][i]}\'' 
+                        if '\'' in self.data[j][i]:
+                            sql += f'\"{self.data[j][i]}\"' 
+                        else:
+                            sql += f'\'{self.data[j][i]}\''
                     else:
                         sql += f'{self.data[j][i]}'
 
@@ -43,7 +46,9 @@ class Table:
                         sql += ', '
                 except IndexError:
                     break
-
+            
+            if sql[-2] == ',':
+                sql = sql[:-2]
             if i < self.rows-2:
                 sql += '), \n('
             elif i < self.rows-1:
@@ -80,19 +85,34 @@ while True:
 
     col = []
     # Read data from the column and stores it in a list
-    for i in columns:
-        for row_cells in sheet.iter_rows(min_row=2, max_row=rows):
-            try:
-                if '.' in row_cells[i].value:
-                    col.append(float(row_cells[i].value))
-                else:
-                    col.append(int(row_cells[i].value))
-            except ValueError:
-                col.append(str(row_cells[i].value))
-            except TypeError:
-                col.append(str(row_cells[i].value))
+    # for i in columns:
+    #     for row_cells in sheet.iter_rows(min_row=2, max_row=rows):
+    #         try:
+    #             if '.' in row_cells[i].value:
+    #                 col.append(float(row_cells[i].value))
+    #             else:
+    #                 col.append(int(row_cells[i].value))
+    #         except ValueError:
+    #             col.append(str(row_cells[i].value))
+    #         except TypeError:
+    #             col.append(str(row_cells[i].value))
             
+    #     data.append(col)
+    for i in columns:
+        col = []
+        for row_cells in sheet.iter_rows(min_row=2, max_row=rows):
+            if i < len(row_cells):
+                try:
+                    if '.' in row_cells[i].value:
+                        col.append(float(row_cells[i].value))
+                    else:
+                        col.append(int(row_cells[i].value))
+                except ValueError:
+                    col.append(str(row_cells[i].value))
+                except TypeError:
+                    col.append(str(row_cells[i].value))
         data.append(col)
+
         col = []
     tables.append(Table(name, attributes, columns, data, rows))
     print()
@@ -104,4 +124,8 @@ for table in tables:
 
 print()
 print('*'*5, 'SQL Code', '*'*5)
-print(sql)
+
+with open('SQLCode.txt', 'w') as file:
+    file.write(sql)
+
+print("Done!")
